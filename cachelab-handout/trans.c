@@ -10,8 +10,13 @@
 #include <stdio.h>
 #include "cachelab.h"
 
-int is_transpose(int M, int N, int A[N][M], int B[M][N]);
 
+
+void trans_1(int M, int N, int A[M][N], int B[N][M]);
+void trans_2(int M, int N, int A[M][N], int B[N][M]);
+void trans_3(int M, int N, int A[M][N], int B[N][M]);
+
+int is_transpose(int M, int N, int A[N][M], int B[M][N]);
 /* 
  * transpose_submit - This is the solution transpose function that you
  *     will be graded on for Part B of the assignment. Do not change
@@ -19,9 +24,19 @@ int is_transpose(int M, int N, int A[N][M], int B[M][N]);
  *     searches for that string to identify the transpose function to
  *     be graded. 
  */
+
+
 char transpose_submit_desc[] = "Transpose submission";
 void transpose_submit(int M, int N, int A[N][M], int B[M][N])
 {
+	if (M == 32 && N == 32) {
+		trans_1(M, N, A, B);
+	} else if (M == 64 && N == 64) {
+		trans_2(M, N, A, B);
+	} else if (M == 61 && N == 67) {
+		trans_3(M, N, A, B);
+	}
+
 }
 
 /* 
@@ -43,8 +58,63 @@ void trans(int M, int N, int A[N][M], int B[M][N])
             B[j][i] = tmp;
         }
     }    
-
 }
+
+
+void trans_1(int M, int N, int A[N][M], int B[M][N]) {
+	for (int i = 0; i < M; i += 8) {
+		for (int j = 0; j < N; j += 8) {
+			for (int k = i; k < i + 8; ++k) {
+				int a = A[k][j]; // miss
+				int b = A[k][j + 1];
+				int c = A[k][j + 2];
+				int d = A[k][j + 3];
+				int e = A[k][j + 4];
+				int f = A[k][j + 5];
+				int g = A[k][j + 6];
+				int h = A[k][j + 7];
+				B[j][k] = a; 	 // miss
+				B[j + 1][k] = b; // miss
+				B[j + 2][k] = c; // miss
+				B[j + 3][k] = d; // miss
+				B[j + 4][k] = e; // miss
+				B[j + 5][k] = f; // miss
+				B[j + 6][k] = g; // miss
+				B[j + 7][k] = h; // miss
+			}
+		}
+	}
+}
+
+void trans_2(int M, int N, int A[N][M], int B[M][N]) {
+	for (int i = 0; i < M; i += 4) {
+		for (int j = 0; j < N; j += 4) {
+			for (int k = i; k < i + 4; ++k) {
+				int a = A[k][j];
+				int b = A[k][j + 1];
+				int c = A[k][j + 2];
+				int d = A[k][j + 3];
+				B[j][k] = a;
+				B[j + 1][k] = b;
+				B[j + 2][k] = c;
+				B[j + 3][k] = d;
+			}
+		}
+	}
+} 
+
+void trans_3(int M, int N, int A[N][M], int B[M][N]) {
+	for (int i = 0; i < N; i += 16) {
+		for (int j = 0; j < M; j += 16) {
+			for (int k = i; k < i + 16 && k < N; ++k) {
+				for (int l = j; l < j + 16 && l < M; ++l) {
+					B[l][k] = A[k][l];
+				}
+			}
+		}
+	}
+}
+
 
 /*
  * registerFunctions - This function registers your transpose
@@ -57,9 +127,7 @@ void registerFunctions()
 {
     /* Register your solution function */
     registerTransFunction(transpose_submit, transpose_submit_desc); 
-
     /* Register any additional transpose functions */
-    registerTransFunction(trans, trans_desc); 
 
 }
 
@@ -81,4 +149,5 @@ int is_transpose(int M, int N, int A[N][M], int B[M][N])
     }
     return 1;
 }
+
 
